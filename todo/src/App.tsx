@@ -4,6 +4,7 @@ type Todo = {
   value: string;
   readonly id: number;
   checked: boolean;
+  removed: boolean;
 };
 
 export const App = () => {
@@ -19,6 +20,7 @@ export const App = () => {
       value: text,
       id: new Date().getTime(),
       checked: false,
+      removed: false,
     };
 
     setTodos([newTodo, ...todos]);
@@ -32,12 +34,39 @@ export const App = () => {
   // 参照元も更新されてしまう...
   const handleOnEdit = (id: number, value: string) => {
     // なぜ{ ...todo }を()で囲うのか調べる
-    const deepcopy = todos.map((todo) => ({ ...todo }));
+    const deepCopy = todos.map((todo) => ({ ...todo }));
 
-    const newTodos = deepcopy.map((todo) => {
+    const newTodos = deepCopy.map((todo) => {
       if (todo.id === id) {
         todo.value = value;
       }
+      return todo;
+    });
+
+    setTodos(newTodos);
+  };
+
+  const handleOnCheck = (id: number, checked: boolean) => {
+    const deepCopy = todos.map((todo) => ({ ...todo }));
+
+    const newTodos = deepCopy.map((todo) => {
+      if (todo.id === id) {
+        todo.checked = !checked;
+      }
+      return todo;
+    });
+
+    setTodos(newTodos);
+  };
+
+  const handleOnRemove = (id: number, removed: boolean) => {
+    const deepCopy = todos.map((todo) => ({ ...todo }));
+
+    const newTodos = deepCopy.map((todo) => {
+      if (todo.id === id) {
+        todo.removed = !removed;
+      }
+
       return todo;
     });
 
@@ -61,14 +90,28 @@ export const App = () => {
             <li key={todo.id}>
               <input
                 type="checkbox"
+                disabled={todo.removed}
                 checked={todo.checked}
-                onChange={(e) => e.preventDefault()}
+                onChange={(e) => handleOnCheck(todo.id, todo.checked)}
               />
               <input
                 type="text"
+                disabled={todo.checked || todo.removed}
                 value={todo.value}
                 onChange={(e) => handleOnEdit(todo.id, e.target.value)}
               />
+              <button onClick={() => handleOnRemove(todo.id, todo.removed)}>
+                {todo.removed ? "復元" : "削除"}
+              </button>
+              <div>
+                <select defaultValue="all" onChange={(e) => e.preventDefault()}>
+                  <option value="all">全てのタスク</option>
+                  <option value="checked">完了済みのタスク</option>
+                  <option value="unChecked">未完了のタスク</option>
+                  <option value="removed">ゴミ箱</option>
+                </select>
+                <form onSubmit={(e) => handleOnSubmit()}></form>
+              </div>
             </li>
           );
         })}
